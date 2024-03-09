@@ -42,10 +42,7 @@ function thresh
     {
         return a.
     }
-    else
-    {
-        return b.
-    }
+    return b.
 }
 
 function execute_order
@@ -69,12 +66,15 @@ function execute_order
         lock cruising_speed_diff to order:speed - linear_speed.
         lock cruising_ratio to cruising_speed_diff / order:speed.
 
-        lock acc to vCrs(rel_pos:normalized, rot_vec).
-        lock acc_alignment to vDot(ship:facing:forevector, acc).
-        lock timetil to rel_pos:mag / linear_speed / (main_engine:availablethrust / ship:mass) / 2.
-        lock target_steering to (rel_pos:normalized * cruising_ratio + acc / (abs(timetil))).
+        lock timetil to max(abs(rel_pos:mag / (linear_speed ^ 2)), 0.03).
+        lock acc to vCrs(rel_pos:normalized, rot_vec) / timetil.
+        lock acc_alignment to vDot(ship:facing:forevector, acc:normalized).
+        lock target_steering to rel_pos:normalized * (cruising_ratio + 0.001) + acc / (abs(cruising_ratio * 5) + 1).
         lock steering to target_steering.
-        lock throttle to alignment * cruising_ratio + sqrt(max(acc_alignment, 0)) * acc:mag / (abs(timetil)).
+        lock throttle to vDot(ship:facing:forevector, target_steering:normalized) * (acc:mag * acc_alignment + cruising_ratio).
+        // lock target_steering to rel_pos:normalized * cruising_ratio.
+        // lock steering to target_steering.
+        // lock throttle to alignment * cruising_ratio.
 
         rcs on.
         SET steeringmanager:rolltorquefactor TO 0.01.
