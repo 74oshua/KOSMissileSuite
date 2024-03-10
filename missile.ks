@@ -60,21 +60,10 @@ function execute_order
         main_engine:activate().
         lock rel_pos to kill_target:position - ship:position.
         lock rel_vel to kill_target:velocity:orbit - ship:velocity:orbit.
-        lock rot_vec to vCrs(rel_pos:normalized, -rel_vel:normalized).
-        lock alignment to vDot(rel_pos:normalized, ship:facing:forevector).
-        lock linear_speed to vDot(rel_pos:normalized, -rel_vel:normalized) * rel_vel:mag.
-        lock cruising_speed_diff to order:speed - linear_speed.
-        lock cruising_ratio to cruising_speed_diff / order:speed.
-
-        lock timetil to max(abs(rel_pos:mag / (linear_speed ^ 2)), 0.03).
-        lock acc to vCrs(rel_pos:normalized, rot_vec) / timetil.
-        lock acc_alignment to vDot(ship:facing:forevector, acc:normalized).
-        lock target_steering to rel_pos:normalized * (cruising_ratio + 0.001) + acc / (abs(cruising_ratio * 5) + 1).
+        lock vel_err to rel_vel + rel_pos:normalized * order:speed.
+        lock target_steering to vel_err + rel_pos:normalized * 0.001.
         lock steering to target_steering.
-        lock throttle to vDot(ship:facing:forevector, target_steering:normalized) * (acc:mag * acc_alignment + cruising_ratio).
-        // lock target_steering to rel_pos:normalized * cruising_ratio.
-        // lock steering to target_steering.
-        // lock throttle to alignment * cruising_ratio.
+        lock throttle to vDot(ship:facing:forevector, target_steering) * vel_err:mag / order:speed.
 
         rcs on.
         SET steeringmanager:rolltorquefactor TO 0.01.
